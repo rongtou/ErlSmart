@@ -17,3 +17,7 @@ Erlc = erlc -Werror -I include +debug_info -o ebin
 ebin/%.beam:src/%.erl
 	@ echo compile `basename $<`
 	@ ${Erlc} $<
+
+.PHONY:run
+run:
+	@ erl -noinput -pa ebin -s es_parser run ebin/test.beam -s erlang halt

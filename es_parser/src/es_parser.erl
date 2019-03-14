@@ -2,28 +2,32 @@
 %% @doc 
 -module(es_parser).
 
--export([do/1]).
+-export([run/1]).
 
-do(File) ->
+run(File) ->
     case beam_lib:chunks(File, [abstract_code]) of
-        {ok, {Mod, [{abstract_code, {_, ChunkResult}}]}} ->
-            Result = parse(ChunkResult, []),
-            io:format("~w ~n~p~n", [Mod, Result]);
+        {ok, {Mod, [{abstract_code, {_, Chunk}}]}} ->
+            Result = parse(Chunk),
+            io:format("~w ~n~p~n", [Mod, Result]),
+            Result;
         _ ->
             ignore
     end.
 
-parse([], Acc) ->
-    Acc;
-parse([{'attribute', _, 'export', Exports}|T], Acc) ->
-    parse(T, [{export, Exports}|Acc]);
+parse(Chunk) ->
+    parse(Chunk, #{export => [], func => []}).
 
-parse([{function, Line, Func, Arity, Detail}|T], Acc) ->
+parse([], Result) ->
+    Result;
+parse([{'attribute', _, 'export', Exports}|T], Result) ->
+    parse(T, maps_append(export, Exports, Result));
+
+parse([{function, Line, Func, Arity, Detail}|T], Result) ->
     Argus = parse_argus(Detail),
-    parse(T, [{func, Func, Arity, Line, Argus}|Acc]);
+    parse(T, maps_append(func, {Func, Arity, Line, Argus}, Result));
 
-parse([_|T], Acc) ->
-    parse(T, Acc).
+parse([_|T], Result) ->
+    parse(T, Result).
 
 parse_argus(Detail) ->
     {clause, _, T, _, _} = hd(Detail),
@@ -58,3 +62,7 @@ parse_argus_2([{map,_,_}|T], Acc) ->
 parse_argus_2([_|T], Acc) ->
     parse_argus_2(T, ['Param'|Acc]).
 
+maps_append(Key, List, Map) when is_list(List) ->
+    maps:update_with(Key, fun(L) -> List ++ L end, List, Map);
+maps_append(Key, Elem, Map) ->
+    maps:update_with(Key, fun(L) -> [Elem | L] end, [Elem], Map).
