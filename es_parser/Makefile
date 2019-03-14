@@ -21,3 +21,7 @@ ebin/%.beam:src/%.erl
 .PHONY:run
 run:
 	@ erl -noinput -pa ebin -s es_parser run ebin/test.beam -s erlang halt
+
+.PHONY:beam_code
+beam_code:
+	@ erl -noinput -pa ebin -s beam_code start ebin/test.beam -s erlang halt

@@ -4,6 +4,7 @@
 
 -export([start_1/0, start_2/2, start_3/2, start_4/1]).
 -export([start_5/1, start_6/1]).
+-export([keyfind/3]).
 
 -record(a, {b}).
 
@@ -26,3 +27,12 @@ start_4([_H|T]) -> start_4(T).
 start_5(#a{b = 1}) -> ok.
 
 start_6(#{b := A}) -> A.
+
+-spec keyfind(Key, N, TupleList) -> Tuple | false when
+      Key :: term(),
+      N :: pos_integer(),
+      TupleList :: [Tuple],
+      Tuple :: tuple().
+
+keyfind(A, B, C) ->
+    A + B + C.
