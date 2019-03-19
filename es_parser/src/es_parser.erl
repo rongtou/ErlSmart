@@ -5,14 +5,30 @@
 -export([run/1]).
 
 run(File) ->
-    case beam_lib:chunks(File, [abstract_code]) of
-        {ok, {Mod, [{abstract_code, {_, Chunk}}]}} ->
-            Result = walk_ast(Chunk),
-            io:format("~w ~n~p~n", [Mod, Result]),
+    case file:read_file(File) of
+        {ok, FileBin} ->
+            Forms = scan(erl_scan:tokens([], binary_to_list(FileBin), 1), []),
+            F = fun(X) ->
+                case erl_parse:parse_form(X) of
+                    {ok, ExprList} -> 
+                        ExprList;
+                    {error, _ErrorInfo} -> 
+                        % try to ignore invalid syntax
+                        none
+                end
+            end,
+            Chunks = [F(X) || X <- Forms],
+            Result = walk_ast(Chunks),
+            io:format("~p~n", [Result]),
             Result;
         _ ->
-            ignore
+            none
     end.
+
+scan({done, {ok, T, N}, S}, Res) ->
+    scan(erl_scan:tokens([], S, N), [T|Res]);
+scan(_, Res) ->
+    lists:reverse(Res).
 
 walk_ast(Chunk) ->
     walk_ast(Chunk, #{export => [], func => []}).
