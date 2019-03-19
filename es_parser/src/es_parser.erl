@@ -7,33 +7,33 @@
 run(File) ->
     case beam_lib:chunks(File, [abstract_code]) of
         {ok, {Mod, [{abstract_code, {_, Chunk}}]}} ->
-            Result = parse(Chunk),
+            Result = walk_ast(Chunk),
             io:format("~w ~n~p~n", [Mod, Result]),
             Result;
         _ ->
             ignore
     end.
 
-parse(Chunk) ->
-    parse(Chunk, #{export => [], func => []}).
+walk_ast(Chunk) ->
+    walk_ast(Chunk, #{export => [], func => []}).
 
-parse([], Result) ->
+walk_ast([], Result) ->
     Result;
-parse([{'attribute', _, 'export', Exports}|T], Result) ->
-    parse(T, maps_append(export, Exports, Result));
+walk_ast([{attribute, _, export, Exports}|T], Result) ->
+    walk_ast(T, maps_append(export, Exports, Result));
 
-parse([{function, Line, Func, Arity, Detail}|T], Result) ->
-    Argus = parse_argus(Detail),
-    parse(T, maps_append(func, {Func, Arity, Line, Argus}, Result));
+walk_ast([{function, Line, Func, Arity, Clauses}|T], Result) ->
+    Args = walk_clauses(Clauses),
+    walk_ast(T, maps_append(func, {Func, Arity, Line, Args}, Result));
 
-parse([_|T], Result) ->
-    parse(T, Result).
+walk_ast([_|T], Result) ->
+    walk_ast(T, Result).
 
-parse_argus(Detail) ->
-    {clause, _, T, _, _} = hd(Detail),
+walk_clauses(Clauses) ->
+    {clause, _, T, _, _} = hd(Clauses),
     Default = lists:duplicate(length(T), 'Param'),
-    lists:foldl(fun({clause, _, Argus, _, _}, Params) ->
-        ArgusList = parse_argus_2(Argus, []),
+    lists:foldl(fun({clause, _, Args, _, _}, Params) ->
+        ArgsList = walk_func_args(Args, []),
         lists:zipwith(fun(X, Y) ->
             if
                 X == atom -> Y;
@@ -41,26 +41,26 @@ parse_argus(Detail) ->
                 X == '' -> Y;
                 true -> X
             end
-        end, ArgusList, Params)
-    end, Default, Detail).
+        end, ArgsList, Params)
+    end, Default, Clauses).
 
-parse_argus_2([], Acc) ->
+walk_func_args([], Acc) ->
     lists:reverse(Acc);
-parse_argus_2([{atom,_,_AtomArgus}|T], Acc) ->
-    parse_argus_2(T, [atom|Acc]);
-parse_argus_2([{var,_,VarArgus}|T], Acc) ->
-    VarArgus2 = case atom_to_list(VarArgus) of
+walk_func_args([{atom,_,_AtomArgs}|T], Acc) ->
+    walk_func_args(T, [atom|Acc]);
+walk_func_args([{var,_,VarArgs}|T], Acc) ->
+    VarArgs2 = case atom_to_list(VarArgs) of
         [$_] -> 'Param';
         [$_|Tail] -> list_to_atom(Tail);
-        _ -> VarArgus
+        _ -> VarArgs
     end,
-    parse_argus_2(T, [VarArgus2|Acc]);
-parse_argus_2([{cons,_,_,_}|T], Acc) ->
-    parse_argus_2(T, ['List'|Acc]);
-parse_argus_2([{map,_,_}|T], Acc) ->
-    parse_argus_2(T, ['Map'|Acc]);
-parse_argus_2([_|T], Acc) ->
-    parse_argus_2(T, ['Param'|Acc]).
+    walk_func_args(T, [VarArgs2|Acc]);
+walk_func_args([{cons,_,_,_}|T], Acc) ->
+    walk_func_args(T, ['List'|Acc]);
+walk_func_args([{map,_,_}|T], Acc) ->
+    walk_func_args(T, ['Map'|Acc]);
+walk_func_args([_|T], Acc) ->
+    walk_func_args(T, ['Param'|Acc]).
 
 maps_append(Key, List, Map) when is_list(List) ->
     maps:update_with(Key, fun(L) -> List ++ L end, List, Map);
