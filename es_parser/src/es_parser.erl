@@ -7,7 +7,7 @@
 run(File) ->
     case file:read_file(File) of
         {ok, FileBin} ->
-            Forms = scan(erl_scan:tokens([], binary_to_list(FileBin), 1), []),
+            Tokens = tokens(FileBin),
             F = fun(X) ->
                 case erl_parse:parse_form(X) of
                     {ok, ExprList} -> 
@@ -17,13 +17,16 @@ run(File) ->
                         none
                 end
             end,
-            Chunks = [F(X) || X <- Forms],
+            Chunks = [F(X) || X <- Tokens],
             Result = walk_ast(Chunks),
             io:format("~p~n", [Result]),
             Result;
         _ ->
             none
     end.
+
+tokens(FileBin) ->
+    scan(erl_scan:tokens([], binary_to_list(FileBin), 1), []).
 
 scan({done, {ok, T, N}, S}, Res) ->
     scan(erl_scan:tokens([], S, N), [T|Res]);
