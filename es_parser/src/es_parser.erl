@@ -4,6 +4,10 @@
 
 -export([run/1]).
 
+-define(export, <<"export">>).
+-define(func, <<"func">>).
+-define(param, <<"Param">>).
+
 run(File) ->
     case file:read_file(File) of
         {ok, FileBin} ->
@@ -20,6 +24,7 @@ run(File) ->
             Chunks = [F(X) || X <- Tokens],
             Result = walk_ast(Chunks),
             io:format("~p~n", [Result]),
+            io:format("~p~n", [jsx:encode(Result)]),
             Result;
         _ ->
             none
@@ -34,32 +39,41 @@ scan(_, Res) ->
     lists:reverse(Res).
 
 walk_ast(Chunk) ->
-    walk_ast(Chunk, #{export => [], func => []}).
+    walk_ast(Chunk, #{?export => [], ?func => []}).
 
 walk_ast([], Result) ->
     Result;
-walk_ast([{attribute, _, export, Exports}|T], Result) ->
-    walk_ast(T, maps_append(export, Exports, Result));
+walk_ast([{attribute, _, export, Exports0}|T], Result) ->
+    Exports = lists:map(fun({Func, Arity}) ->
+        #{<<"name">> => to_json_val(Func), <<"arity">> => Arity}
+    end, Exports0), 
+    walk_ast(T, maps_append(?export, Exports, Result));
 
 walk_ast([{function, Line, Func, Arity, Clauses}|T], Result) ->
     Args = walk_clauses(Clauses),
-    walk_ast(T, maps_append(func, {Func, Arity, Line, Args}, Result));
+    walk_ast(T, maps_append(?func, #{
+        <<"name">>  => to_json_val(Func),
+        <<"arity">> => Arity, 
+        <<"line">>  => Line, 
+        <<"args">>  => Args
+    }, Result));
 
 walk_ast([_|T], Result) ->
     walk_ast(T, Result).
 
 walk_clauses(Clauses) ->
     {clause, _, T, _, _} = hd(Clauses),
-    Default = lists:duplicate(length(T), 'Param'),
+    Default = lists:duplicate(length(T), <<"Param">>),
     lists:foldl(fun({clause, _, Args, _, _}, Params) ->
         ArgsList = walk_func_args(Args, []),
         lists:zipwith(fun(X, Y) ->
-            if
+            Val = if
                 X == atom -> Y;
                 X == '_' -> Y;
                 X == '' -> Y;
                 true -> X
-            end
+            end,
+            to_json_val(Val)
         end, ArgsList, Params)
     end, Default, Clauses).
 
@@ -85,3 +99,12 @@ maps_append(Key, List, Map) when is_list(List) ->
     maps:update_with(Key, fun(L) -> List ++ L end, List, Map);
 maps_append(Key, Elem, Map) ->
     maps:update_with(Key, fun(L) -> [Elem | L] end, [Elem], Map).
+
+to_json_val(Val) when is_atom(Val) ->
+    erlang:list_to_binary(erlang:atom_to_list(Val));
+to_json_val(Val) when is_integer(Val) ->
+    Val;
+to_json_val(Val) when is_list(Val) ->
+    erlang:list_to_binary(Val);
+to_json_val(Val) when is_binary(Val) ->
+    Val.
