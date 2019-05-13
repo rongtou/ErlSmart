@@ -1,4 +1,4 @@
-import time, logging
+import logging
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 
@@ -8,9 +8,6 @@ class Monitor():
         self.__observer = Observer()
 
     def run(self):
-        logging.basicConfig(level=logging.INFO,
-                            format='%(asctime)s - %(message)s',
-                            datefmt='%Y-%m-%d %H:%M:%S')
         path = "e:\\Work\\xw01\\server"
         event_handler = ErlFileEventHandler()
         self.__observer.schedule(event_handler, path, recursive=True)
@@ -18,6 +15,7 @@ class Monitor():
 
     def shutdown(self):
         self.__observer.stop()
+
 
 class ErlFileEventHandler(FileSystemEventHandler):
     """Logs all the events captured."""
