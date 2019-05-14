@@ -3,18 +3,26 @@ from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 
 
-class Monitor():
+class Monitor(object):
     def __init__(self):
-        self.__observer = Observer()
+        self._observer = Observer()
 
     def run(self):
         path = "e:\\Work\\xw01\\server"
+        self.add_path(path)
+        if not self._observer.isAlive():
+            self._observer.start()
+
+    def add_path(self, path):
         event_handler = ErlFileEventHandler()
-        self.__observer.schedule(event_handler, path, recursive=True)
-        self.__observer.start()
+        self._observer.schedule(event_handler, path, recursive=True)
 
     def shutdown(self):
-        self.__observer.stop()
+        if self._observer.isAlive():
+            print("shutdown")
+            self._observer.stop()
+            self._observer.join()
+            print(self._observer.isAlive())
 
 
 class ErlFileEventHandler(FileSystemEventHandler):
