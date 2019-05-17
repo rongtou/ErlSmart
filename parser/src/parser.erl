@@ -12,12 +12,12 @@
 %%====================================================================
 
 %% escript Entry point
-main([File]) ->
-    run(File),
+main(File) ->
+    run(string:join(File, " ")),
     erlang:halt(0).
 
 %%====================================================================
-%% Internal functions
+%% INTERNAL functions
 %%====================================================================
 run(File) ->
     case file:read_file(File) of
@@ -34,8 +34,8 @@ run(File) ->
             end,
             Chunks = [F(X) || X <- Tokens],
             Result = walk_ast(Chunks),
-%            io:format("~p~n", [Result]),
-            io:format("~p", [jsx:encode(Result)]),
+%%            io:format("~p~n", [Result]),
+            io:format("~p~n", [jsx:encode(Result)]),
             Result;
         _ ->
             none

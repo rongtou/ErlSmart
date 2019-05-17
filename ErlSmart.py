@@ -32,7 +32,7 @@ def init():
 
 
 def init_log():
-    logging.basicConfig(level=logging.INFO,
+    logging.basicConfig(level=logging.WARNING,
                         format='%(asctime)s - %(message)s',
                         datefmt='%Y-%m-%d %H:%M:%S')
 
@@ -46,8 +46,8 @@ def init_monitor():
 def init_pool():
     global pool
     pool = ThreadPoolExecutor(4)
-    for i in range(10):
-        add_task(i)
+    # for i in range(10):
+    #     add_task(i)
 
 
 def scan_file():
