@@ -35,7 +35,7 @@ run(File) ->
             Chunks = [F(X) || X <- Tokens],
             Result = walk_ast(Chunks),
 %%            io:format("~p~n", [Result]),
-            io:format("~p~n", [jsx:encode(Result)]),
+            io:format("~s", [jsx:encode(Result)]),
             Result;
         _ ->
             none
