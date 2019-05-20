@@ -1,12 +1,10 @@
 import sublime
-import threading
-import time
 import logging
-import os
 import platform
 import subprocess
 from .monitor import Monitor
 from .scan import scan
+from .db import init_db
 from concurrent.futures import ThreadPoolExecutor
 
 pool = None
@@ -15,8 +13,8 @@ monitor = None
 
 def startup():
     print("======= ErlSmart plugin load ")
-    print(os.getcwd())
     init_log()
+    init_db()
     init_monitor()
     init_pool()
     scan_file()
@@ -28,7 +26,7 @@ def shutdown():
 
 
 def init_log():
-    logging.basicConfig(level=logging.WARNING,
+    logging.basicConfig(level=logging.INFO,
                         format='%(asctime)s - %(message)s',
                         datefmt='%Y-%m-%d %H:%M:%S')
 

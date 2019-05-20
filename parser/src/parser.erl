@@ -3,6 +3,7 @@
 %% API exports
 -export([main/1]).
 
+-define(mod, <<"mod">>).
 -define(export, <<"export">>).
 -define(func, <<"func">>).
 -define(param, <<"Param">>).
@@ -54,6 +55,10 @@ walk_ast(Chunk) ->
 
 walk_ast([], Result) ->
     Result;
+
+walk_ast([{attribute, _, module, Mod}|T], Result) ->
+    walk_ast(T, maps:put(?mod, to_json_val(Mod), Result));
+
 walk_ast([{attribute, _, export, Exports0}|T], Result) ->
     Exports = lists:map(fun({Func, Arity}) ->
         #{<<"name">> => to_json_val(Func), <<"arity">> => Arity}
