@@ -1,6 +1,7 @@
 import logging
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
+from .job import start_job
 
 
 class Monitor(object):
@@ -19,28 +20,34 @@ class Monitor(object):
 
     def shutdown(self):
         if self._observer.isAlive():
-            print("shutdown")
             self._observer.stop()
             self._observer.join()
-            print(self._observer.isAlive())
 
 
 class ErlFileEventHandler(FileSystemEventHandler):
     """Logs all the events captured."""
 
     def on_moved(self, event):
-        what = 'directory' if event.is_directory else 'file'
-        logging.info("Moved %s: from %s to %s", what, event.src_path,
-                     event.dest_path)
+        # what = 'directory' if event.is_directory else 'file'
+        # logging.info("Moved %s: from %s to %s", what, event.src_path,
+        #              event.dest_path)
+        pass
 
     def on_created(self, event):
-        what = 'directory' if event.is_directory else 'file'
-        logging.info("Created %s: %s", what, event.src_path)
+        # what = 'directory' if event.is_directory else 'file'
+        # logging.info("Created %s: %s", what, event.src_path)
+        if not event.is_directory:
+            start_job(event.src_path)
 
     def on_deleted(self, event):
-        what = 'directory' if event.is_directory else 'file'
-        logging.info("Deleted %s: %s", what, event.src_path)
+        # what = 'directory' if event.is_directory else 'file'
+        # logging.info("Deleted %s: %s", what, event.src_path)
+        pass
+        # if event.is_directory:
+        #     start_job(event.src_path)
 
     def on_modified(self, event):
-        what = 'directory' if event.is_directory else 'file'
-        logging.info("Modified %s: %s", what, event.src_path)
+        # what = 'directory' if event.is_directory else 'file'
+        # logging.info("Modified %s: %s", what, event.src_path)
+        if not event.is_directory:
+            start_job(event.src_path)

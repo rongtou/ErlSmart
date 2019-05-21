@@ -1,8 +1,13 @@
-import logging
 import subprocess
 import json
 import os
 import ErlSmart.core.global_vars as gv
+
+
+def start_job(file_path: str):
+    pool = gv.get('pool')
+    if file_path.endswith(".erl"):
+        pool.submit(run_job, file_path)
 
 
 def run_job(file_path: str):

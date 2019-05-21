@@ -3,6 +3,7 @@ import ErlSmart.core.global_vars as gv
 import queue
 import hashlib
 import logging
+import os
 import traceback
 from threading import Thread
 
@@ -100,13 +101,17 @@ class CacheWriter(Thread):
     def run(self):
         while True:
             path, modified, ret = self.__reqs.get()
+
+            if not self.is_file_need_update(path):
+                continue
+
             encrypt = hashlib.md5()
             encrypt.update(path.encode("utf-8"))
             fid = encrypt.hexdigest()
-            self.__cur.execute("insert into file_path(id, path, updated_at) values(?,?,?)", (fid, path, modified))
-            self.__cur.execute("delete from erl_file where fid=?", (fid,))
-            mod = ret['mod']
             try:
+                self.__cur.execute("insert into file_path(id, path, updated_at) values(?,?,?)", (fid, path, modified))
+                self.__cur.execute("delete from erl_file where fid=?", (fid,))
+                mod = ret['mod']
                 for funobj in ret['func']:
                     self.__cur.execute(
                         "insert into erl_file(fid, mod, fun, arity, line, args, exported) values(?,?,?,?,?,?,?)",
@@ -120,3 +125,16 @@ class CacheWriter(Thread):
     def add_req(self, path, modified, ret):
         self.__reqs.put((path, modified, ret))
 
+    def is_file_need_update(self, path: str) -> bool:
+        modified = int(os.path.getmtime(path))
+        ret = None
+        try:
+            self.__cur.execute("select updated_at from file_path where path=?", (path,))
+            ret = self.__cur.fetchone()
+        except Exception as err:
+            logging.error("err: %s", err)
+            traceback.print_exc()
+        if ret is None:
+            return True
+        else:
+            return ret[0] != modified

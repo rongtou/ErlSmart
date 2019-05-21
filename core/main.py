@@ -1,14 +1,13 @@
 import sublime
 import logging
+import os
 import platform
 import subprocess
+import ErlSmart.core.global_vars as gv
 from .monitor import Monitor
-from .scan import scan
 from .db import init_db
+from .job import start_job
 from concurrent.futures import ThreadPoolExecutor
-
-pool = None
-monitor = None
 
 
 def startup():
@@ -21,8 +20,8 @@ def startup():
 
 
 def shutdown():
-    monitor.shutdown()
-    pool.shutdown()
+    gv.get('monitor').shutdown()
+    gv.get('pool').shutdown()
 
 
 def init_log():
@@ -32,14 +31,13 @@ def init_log():
 
 
 def init_monitor():
-    global monitor
     monitor = Monitor()
     monitor.run()
+    gv.put('monitor', monitor)
 
 
 def init_pool():
-    global pool
-    pool = ThreadPoolExecutor(5)
+    gv.put('pool', ThreadPoolExecutor(5))
 
 
 def scan_file():
@@ -47,4 +45,11 @@ def scan_file():
     erl_lib = subprocess.getoutput("escript core/erl_lib.erl")
     if platform.system() == "Windows":
         erl_lib = erl_lib.replace("/", "\\").capitalize()
-    sublime.set_timeout_async(lambda: scan(pool, erl_lib), 100)
+    sublime.set_timeout_async(lambda: scan(erl_lib), 100)
+
+
+def scan(path: str):
+    for file_path, dirs, files in os.walk(path):
+        for f in files:
+            filename = os.path.join(file_path, f)
+            start_job(filename)
