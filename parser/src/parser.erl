@@ -67,11 +67,17 @@ walk_ast([{attribute, _, export, Exports0}|T], Result) ->
 
 walk_ast([{function, Line, Func, Arity, Clauses}|T], Result) ->
     Args = walk_clauses(Clauses),
+    Exports = maps:get(?export, Result),
+    IsExported = lists:any(fun(E) ->
+      to_json_val(Func) == maps:get(<<"name">>, E)
+        andalso Arity == maps:get(<<"arity">>, E)
+    end , Exports),
     walk_ast(T, maps_append(?func, #{
-        <<"name">>  => to_json_val(Func),
-        <<"arity">> => Arity,
-        <<"line">>  => Line,
-        <<"args">>  => Args
+        <<"name">>     => to_json_val(Func),
+        <<"arity">>    => Arity,
+        <<"line">>     => Line,
+        <<"args">>     => Args,
+        <<"exported">> => IsExported
     }, Result));
 
 walk_ast([_|T], Result) ->

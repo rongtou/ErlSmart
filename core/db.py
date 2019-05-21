@@ -2,7 +2,8 @@ import sqlite3
 import ErlSmart.core.global_vars as gv
 import queue
 import hashlib
-import os
+import logging
+import traceback
 from threading import Thread
 
 cache_file = "cache/cache.db"
@@ -25,7 +26,7 @@ create table if not exists erl_file (
     line int unsigned not null,
     args varchar(256) not null,
     exported bool not null,
-    primary key(fid, mod, fun, arity)
+    primary key(fid, mod, fun, arity, line)
 );
 '''
 
@@ -41,21 +42,21 @@ def init_db():
 class Cache(object):
 
     def __init__(self):
-        self._pool_size = 10
-        self._pool = queue.Queue(self._pool_size)
+        self.__pool_size = 10
+        self.__pool = queue.Queue(self.__pool_size)
         self._create_con()
 
     def _create_con(self):
-        for i in range(self._pool_size):
+        for i in range(self.__pool_size):
             con = sqlite3.connect(cache_file, check_same_thread=False)
             con.execute('pragma journal_mode=wal')
-            self._pool.put(con)
+            self.__pool.put(con)
 
     def get_con(self) -> sqlite3.Connection:
-        return self._pool.get()
+        return self.__pool.get()
 
     def release_con(self, con):
-        self._pool.put(con)
+        self.__pool.put(con)
 
     def create_table(self):
         con = self.get_con()
@@ -71,13 +72,19 @@ class Cache(object):
             cur.execute("select updated_at from file_path where path=?", (path,))
             ret = cur.fetchone()
         except Exception as err:
-            print("error ", err)
+            logging.error("err: %s", err)
+            traceback.print_exc()
         finally:
             self.release_con(con)
         if ret is None:
             return True
         else:
             return ret[0] != modified
+
+    def close(self):
+        for i in range(self.__pool_size):
+            con = self.__pool.get()
+            con.close()
 
 
 class CacheWriter(Thread):
@@ -98,12 +105,18 @@ class CacheWriter(Thread):
             fid = encrypt.hexdigest()
             self.__cur.execute("insert into file_path(id, path, updated_at) values(?,?,?)", (fid, path, modified))
             self.__cur.execute("delete from erl_file where fid=?", (fid,))
-            mod = os.path.splitext(os.path.basename(path))[0]
-            for funobj in ret['func']:
-                self.__cur.execute("insert into erl_file(fid, mod, fun, arity, line, args) values(?,?,?,?,?,?)",
-                                   [fid, mod, funobj['name'], funobj['arity'], funobj['line'],
-                                    ", ".join(funobj['args'])])
-            self.__con.commit()
+            mod = ret['mod']
+            try:
+                for funobj in ret['func']:
+                    self.__cur.execute(
+                        "insert into erl_file(fid, mod, fun, arity, line, args, exported) values(?,?,?,?,?,?,?)",
+                        [fid, mod, funobj['name'], funobj['arity'], funobj['line'],
+                         ", ".join(funobj['args']), funobj['exported']])
+                self.__con.commit()
+            except Exception as err:
+                logging.error("err: %s", err)
+                traceback.print_exc()
 
     def add_req(self, path, modified, ret):
         self.__reqs.put((path, modified, ret))
+
