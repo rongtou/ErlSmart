@@ -6,7 +6,7 @@ import subprocess
 import ErlSmart.core.global_vars as gv
 from .monitor import Monitor
 from .db import init_db
-from .job import start_job
+from .job import add_index_job
 from concurrent.futures import ThreadPoolExecutor
 
 
@@ -52,4 +52,4 @@ def scan(path: str):
     for file_path, dirs, files in os.walk(path):
         for f in files:
             filename = os.path.join(file_path, f)
-            start_job(filename)
+            add_index_job(filename)

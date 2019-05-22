@@ -11,10 +11,10 @@ cache_file = "cache/cache.db"
 
 CREATE_FOLDER_SQL = '''
 create table if not exists file_path (
-    id varchar(32) not null,
+    fid varchar(32) not null,
     path varchar(256) not null,
     updated_at int unsigned not null,
-    primary key(id)
+    primary key(fid)
 );
 '''
 
@@ -100,41 +100,74 @@ class CacheWriter(Thread):
 
     def run(self):
         while True:
-            path, modified, ret = self.__reqs.get()
+            op, param = self.__reqs.get()
+            if op == "index":
+                self.add_index(param)
+            else:
+                self.del_index(param)
 
-            if not self.is_file_need_update(path):
-                continue
+    def add_index(self, param):
+        path, parse_obj = param
+
+        modified = int(os.path.getmtime(path))
+        try:
+            self.__cur.execute("select updated_at from file_path where path=?", (path,))
+            ret = self.__cur.fetchone()
+            if ret is None:
+                need_update = True
+            else:
+                need_update = ret[0] != modified
+
+            if not need_update:
+                return
 
             encrypt = hashlib.md5()
             encrypt.update(path.encode("utf-8"))
             fid = encrypt.hexdigest()
-            try:
-                self.__cur.execute("insert into file_path(id, path, updated_at) values(?,?,?)", (fid, path, modified))
-                self.__cur.execute("delete from erl_file where fid=?", (fid,))
-                mod = ret['mod']
-                for funobj in ret['func']:
-                    self.__cur.execute(
-                        "insert into erl_file(fid, mod, fun, arity, line, args, exported) values(?,?,?,?,?,?,?)",
-                        [fid, mod, funobj['name'], funobj['arity'], funobj['line'],
-                         ", ".join(funobj['args']), funobj['exported']])
-                self.__con.commit()
-            except Exception as err:
-                logging.error("err: %s", err)
-                traceback.print_exc()
-
-    def add_req(self, path, modified, ret):
-        self.__reqs.put((path, modified, ret))
-
-    def is_file_need_update(self, path: str) -> bool:
-        modified = int(os.path.getmtime(path))
-        ret = None
-        try:
-            self.__cur.execute("select updated_at from file_path where path=?", (path,))
-            ret = self.__cur.fetchone()
+            if ret is None:
+                logging.debug("index insert %s", path)
+                self.__cur.execute("insert into file_path(fid, path, updated_at) values(?,?,?)", (fid, path, modified))
+            else:
+                logging.debug("index update %s", path)
+                self.__cur.execute("update file_path set updated_at = ? where fid = ?", (modified, fid))
+            self.__cur.execute("delete from erl_file where fid=?", (fid,))
+            mod = parse_obj['mod']
+            for funobj in parse_obj['func']:
+                logging.debug("index %s %s", mod, funobj['name'])
+                self.__cur.execute(
+                    "insert into erl_file(fid, mod, fun, arity, line, args, exported) values(?,?,?,?,?,?,?)",
+                    [fid, mod, funobj['name'], funobj['arity'], funobj['line'],
+                     ", ".join(funobj['args']), funobj['exported']])
+            self.__con.commit()
         except Exception as err:
+            self.__con.rollback()
             logging.error("err: %s", err)
             traceback.print_exc()
-        if ret is None:
-            return True
-        else:
-            return ret[0] != modified
+
+    def del_index(self, path: str):
+        logging.debug("del index ", path)
+        root, ext = os.path.splitext(path)
+        try:
+            if ext == ".erl":
+                encrypt = hashlib.md5()
+                encrypt.update(path.encode("utf-8"))
+                fid = encrypt.hexdigest()
+                self.__cur.execute("delete from file_path where fid=?", (fid,))
+                self.__cur.execute("delete from erl_file where fid=?", (fid,))
+                self.__con.commit()
+            elif ext == "":
+                self.__cur.execute("select fid from file_path where path like '"+ path + "%'")
+                rets = self.__cur.fetchall()
+                if len(rets) > 0:
+                    for ret in rets:
+                        self.__cur.execute("delete from file_path where fid=?", (ret[0],))
+                        self.__cur.execute("delete from erl_file where fid = ?", (ret[0], ))
+                        self.__con.commit()
+        except Exception as err:
+            self.__con.rollback()
+            logging.error("err: %s", err)
+            traceback.print_exc()
+
+    def add_req(self, op, param):
+        self.__reqs.put((op, param))
+
