@@ -1,4 +1,4 @@
-import logging
+import platform
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 from .job import add_index_job, del_index_job
@@ -37,15 +37,21 @@ class ErlFileEventHandler(FileSystemEventHandler):
         # what = 'directory' if event.is_directory else 'file'
         # logging.info("Created %s: %s", what, event.src_path)
         if not event.is_directory:
-            add_index_job(event.src_path)
+            add_index_job(adjust_path(event.src_path))
 
     def on_deleted(self, event):
-        what = 'directory' if event.is_directory else 'file'
-        logging.info("Deleted %s: %s", what, event.src_path)
-        del_index_job(event.src_path)
+        # what = 'directory' if event.is_directory else 'file'
+        # logging.info("Deleted %s: %s", what, event.src_path)
+        del_index_job(adjust_path(event.src_path))
 
     def on_modified(self, event):
-        what = 'directory' if event.is_directory else 'file'
-        logging.info("Modified %s: %s", what, event.src_path)
+        # what = 'directory' if event.is_directory else 'file'
+        # logging.info("Modified %s: %s", what, event.src_path)
         if not event.is_directory:
-            add_index_job(event.src_path)
+            add_index_job(adjust_path(event.src_path))
+
+
+def adjust_path(path):
+    if platform.system() == "Windows":
+        return path.replace("/", "\\").capitalize()
+    return path

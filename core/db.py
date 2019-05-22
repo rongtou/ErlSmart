@@ -4,6 +4,7 @@ import queue
 import hashlib
 import logging
 import os
+import platform
 import traceback
 from threading import Thread
 
@@ -156,12 +157,16 @@ class CacheWriter(Thread):
                 self.__cur.execute("delete from erl_file where fid=?", (fid,))
                 self.__con.commit()
             elif ext == "":
-                self.__cur.execute("select fid from file_path where path like '"+ path + "%'")
+                if platform.system() == "Windows":
+                    path = path + "\\"
+                else:
+                    path = path + "/"
+                self.__cur.execute("select fid from file_path where path like '" + path + "%'")
                 rets = self.__cur.fetchall()
                 if len(rets) > 0:
                     for ret in rets:
                         self.__cur.execute("delete from file_path where fid=?", (ret[0],))
-                        self.__cur.execute("delete from erl_file where fid = ?", (ret[0], ))
+                        self.__cur.execute("delete from erl_file where fid = ?", (ret[0],))
                         self.__con.commit()
         except Exception as err:
             self.__con.rollback()
@@ -170,4 +175,3 @@ class CacheWriter(Thread):
 
     def add_req(self, op, param):
         self.__reqs.put((op, param))
-
