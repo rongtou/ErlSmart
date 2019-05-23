@@ -52,9 +52,8 @@ class ErlListener(sublime_plugin.EventListener):
                 return None
 
     def on_window_command(self, window, command_name, args):
-        # if command_name == 'remove_folder':
-        #     cache['project'].delete_module_index(args['dirs'])
-        pass
+        if command_name == 'remove_folder':
+            gv.get('writer').add_req("del", (args['dirs'], True))
 
     def on_text_command(self, view, command_name, args):
         # 右键菜单 goto

@@ -19,6 +19,9 @@ class Monitor(object):
         event_handler = ErlFileEventHandler()
         self._observer.schedule(event_handler, path, recursive=True)
 
+    def remove_path(self, path):
+        pass
+
     def shutdown(self):
         if self._observer.isAlive():
             self._observer.stop()
@@ -26,7 +29,6 @@ class Monitor(object):
 
 
 class ErlFileEventHandler(FileSystemEventHandler):
-    """Logs all the events captured."""
 
     def on_moved(self, event):
         # what = 'directory' if event.is_directory else 'file'

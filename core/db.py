@@ -98,7 +98,6 @@ class Cache(object):
         for (fun, arity, args) in ret:
             completion = '{0}({1})'.format(fun, args)
             completions.append(['{}/{}\tMethod'.format(fun, arity), completion])
-
         return completions
 
     def get_mods(self):
@@ -116,7 +115,6 @@ class Cache(object):
 
         for (mod,) in ret:
             completions.append(['{}\tModule'.format(mod), mod])
-        # print(completions)
         return completions
 
 
