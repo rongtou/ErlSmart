@@ -7,25 +7,30 @@ from .utils import get_folders, adjust_path
 
 class Monitor(object):
     def __init__(self):
-        self._observer = Observer()
+        self.__observer = Observer()
+        self.__wawtches = {}
 
     def start(self):
         for folder in get_folders():
             self.add_path(folder)
-        if not self._observer.isAlive():
-            self._observer.start()
+        if not self.__observer.isAlive():
+            self.__observer.start()
 
     def add_path(self, path):
+        print(path)
         event_handler = ErlFileEventHandler()
-        self._observer.schedule(event_handler, path, recursive=True)
+        watch = self.__observer.schedule(event_handler, path, recursive=True)
+        self.__wawtches[path] = watch
 
     def remove_path(self, path):
-        pass
+        print(self.__wawtches)
+        watch = self.__wawtches.pop(path)
+        self.__observer.unschedule(watch)
 
     def shutdown(self):
-        if self._observer.isAlive():
-            self._observer.stop()
-            self._observer.join()
+        if self.__observer.isAlive():
+            self.__observer.stop()
+            self.__observer.join()
 
 
 class ErlFileEventHandler(FileSystemEventHandler):

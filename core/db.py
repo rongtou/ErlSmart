@@ -177,9 +177,11 @@ class CacheWriter(Thread):
     def del_index(self, param):
         path, is_dir = param
         logging.debug("del index %s %s", path, is_dir)
-        root, ext = os.path.splitext(path)
         try:
-            if not is_dir and ext == ".erl":
+            if not is_dir:
+                root, ext = os.path.splitext(path)
+                if ext != ".erl":
+                    return
                 encrypt = hashlib.md5()
                 encrypt.update(path.encode("utf-8"))
                 fid = encrypt.hexdigest()
