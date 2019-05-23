@@ -88,7 +88,7 @@ class Cache(object):
         cur = con.cursor()
         ret = []
         try:
-            cur.execute("select fun, arity, args from erl_file where mod=? order by fun, arity", (mod,))
+            cur.execute("select fun, arity, args from erl_file where mod=? and exported = 1 order by fun, arity", (mod,))
             ret = cur.fetchall()
         except sqlite3.Error:
             traceback.print_exc()
@@ -99,6 +99,24 @@ class Cache(object):
             completion = '{0}({1})'.format(fun, args)
             completions.append(['{}/{}\tMethod'.format(fun, arity), completion])
 
+        return completions
+
+    def get_mods(self):
+        completions = []
+        con = self.get_con()
+        cur = con.cursor()
+        ret = []
+        try:
+            cur.execute("select distinct(mod) from erl_file order by mod")
+            ret = cur.fetchall()
+        except sqlite3.Error:
+            traceback.print_exc()
+        finally:
+            self.release_con(con)
+
+        for (mod,) in ret:
+            completions.append(['{}\tModule'.format(mod), mod])
+        # print(completions)
         return completions
 
 
