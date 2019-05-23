@@ -44,6 +44,11 @@ walk_ast([], Result) ->
 walk_ast([{attribute, _, module, Mod}|T], Result) ->
     walk_ast(T, maps:put(?mod, to_json_val(Mod), Result));
 
+walk_ast([{attribute, _, compile, [export_all]}|T], Result) ->
+    erlang:put(export_all, true),
+    walk_ast(T, Result);
+
+
 walk_ast([{attribute, _, export, Exports0}|T], Result) ->
     Exports = lists:map(fun({Func, Arity}) ->
         #{<<"name">> => to_json_val(Func), <<"arity">> => Arity}
@@ -62,7 +67,7 @@ walk_ast([{function, Line, Func, Arity, Clauses}|T], Result) ->
         <<"arity">>    => Arity,
         <<"line">>     => Line,
         <<"args">>     => Args,
-        <<"exported">> => IsExported
+        <<"exported">> => IsExported orelse erlang:get(export_all) == true
     }, Result));
 
 walk_ast([_|T], Result) ->

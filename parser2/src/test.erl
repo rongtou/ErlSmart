@@ -2,6 +2,8 @@
 %% @doc 
 -module(test).
 
+-compile([export_all]).
+-compile(nowarn_export_all).
 -export([start_1/0, start_2/2, start_3/2, start_4/1]).
 -export([start_5/1, start_6/1]).
 -export([keyfind/3]).
