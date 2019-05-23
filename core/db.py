@@ -73,8 +73,7 @@ class Cache(object):
         try:
             cur.execute("select updated_at from file_path where path=?", (path,))
             ret = cur.fetchone()
-        except Exception as err:
-            logging.error("err: %s", err)
+        except sqlite3.Error:
             traceback.print_exc()
         finally:
             self.release_con(con)
@@ -140,9 +139,8 @@ class CacheWriter(Thread):
                     [fid, mod, funobj['name'], funobj['arity'], funobj['line'],
                      ", ".join(funobj['args']), funobj['exported']])
             self.__con.commit()
-        except Exception as err:
+        except sqlite3.Error:
             self.__con.rollback()
-            logging.error("err: %s", err)
             traceback.print_exc()
 
     def del_index(self, path: str):
@@ -168,9 +166,8 @@ class CacheWriter(Thread):
                         self.__cur.execute("delete from file_path where fid=?", (ret[0],))
                         self.__cur.execute("delete from erl_file where fid = ?", (ret[0],))
                         self.__con.commit()
-        except Exception as err:
+        except sqlite3.Error:
             self.__con.rollback()
-            logging.error("err: %s", err)
             traceback.print_exc()
 
     def add_req(self, op, param):

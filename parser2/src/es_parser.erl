@@ -16,15 +16,17 @@ run(File) ->
                 case erl_parse:parse_form(X) of
                     {ok, ExprList} -> 
                         ExprList;
-                    {error, _ErrorInfo} -> 
+                    {error, _ErrorInfo} ->
+                        io:format("~p~n", [_ErrorInfo]),
                         % try to ignore invalid syntax
                         none
                 end
             end,
             Chunks = [F(X) || X <- Tokens],
             Result = walk_ast(Chunks),
-            io:format("~p~n", [Result]),
-            io:format("~p~n", [jsx:encode(Result)]),
+            io:format("~p~n", [Chunks]),
+%%            io:format("~p~n", [Result]),
+%%            io:format("~p~n", [jsx:encode(Result)]),
             Result;
         _ ->
             none

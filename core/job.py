@@ -1,6 +1,7 @@
 import subprocess
 import json
 import os
+import logging
 import ErlSmart.core.global_vars as gv
 
 
@@ -20,8 +21,11 @@ def do_index(file_path: str):
     need_updated = gv.get('cache').is_file_need_update(file_path, modified)
     if need_updated:
         ret = subprocess.getoutput(r"escript parser/_build/default/bin/parser " + file_path)
-        obj = json.loads(ret)
-        gv.get('writer').add_req("index", (file_path, obj))
+        if ret != '':
+            obj = json.loads(ret)
+            gv.get('writer').add_req("index", (file_path, obj))
+        else:
+            logging.debug("can not parser: %s", file_path)
 
 
 def do_del(file_path: str):

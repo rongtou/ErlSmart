@@ -21,41 +21,21 @@ main(File) ->
 %% INTERNAL functions
 %%====================================================================
 run(File) ->
-    case file:read_file(File) of
-        {ok, FileBin} ->
-            Tokens = tokens(FileBin),
-            F = fun(X) ->
-                case erl_parse:parse_form(X) of
-                    {ok, ExprList} ->
-                        ExprList;
-                    {error, _ErrorInfo} ->
-                        % try to ignore invalid syntax
-                        none
-                end
-            end,
-            Chunks = [F(X) || X <- Tokens],
+    case epp_dodger:quick_parse_file(File) of
+        {ok, Forms} ->
+            Chunks = erl_syntax:revert_forms(Forms),
             Result = walk_ast(Chunks),
-%%            io:format("~p~n", [Result]),
             io:format("~s", [jsx:encode(Result)]),
-            Result;
+            ok;
         _ ->
             none
     end.
-
-tokens(FileBin) ->
-    scan(erl_scan:tokens([], binary_to_list(FileBin), 1), []).
-
-scan({done, {ok, T, N}, S}, Res) ->
-    scan(erl_scan:tokens([], S, N), [T|Res]);
-scan(_, Res) ->
-    lists:reverse(Res).
 
 walk_ast(Chunk) ->
     walk_ast(Chunk, #{?export => [], ?func => []}).
 
 walk_ast([], Result) ->
     Result;
-
 walk_ast([{attribute, _, module, Mod}|T], Result) ->
     walk_ast(T, maps:put(?mod, to_json_val(Mod), Result));
 

@@ -21,12 +21,9 @@ def plugin_unloaded():
 
 class ErlListener(sublime_plugin.EventListener):
 
-    def on_load(self, view):
-        pass
-
     def on_window_command(self, window, command_name, args):
-        # remove_folder
-        # print("windows ", command_name, args)
+        # if command_name == 'remove_folder':
+        #     cache['project'].delete_module_index(args['dirs'])
         pass
 
     def on_text_command(self, view, command_name, args):

@@ -1,16 +1,17 @@
-import platform
+import logging
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 from .job import add_index_job, del_index_job
+from .utils import get_folders, adjust_path
 
 
 class Monitor(object):
     def __init__(self):
         self._observer = Observer()
 
-    def run(self):
-        path = "e:\\Work\\xw01\\server"
-        self.add_path(path)
+    def start(self):
+        for folder in get_folders():
+            self.add_path(folder)
         if not self._observer.isAlive():
             self._observer.start()
 
@@ -31,7 +32,7 @@ class ErlFileEventHandler(FileSystemEventHandler):
         # what = 'directory' if event.is_directory else 'file'
         # logging.info("Moved %s: from %s to %s", what, event.src_path,
         #              event.dest_path)
-        pass
+        del_index_job(adjust_path(event.src_path))
 
     def on_created(self, event):
         # what = 'directory' if event.is_directory else 'file'
@@ -45,13 +46,8 @@ class ErlFileEventHandler(FileSystemEventHandler):
         del_index_job(adjust_path(event.src_path))
 
     def on_modified(self, event):
-        # what = 'directory' if event.is_directory else 'file'
-        # logging.info("Modified %s: %s", what, event.src_path)
+        what = 'directory' if event.is_directory else 'file'
+        logging.info("Modified %s: %s", what, event.src_path)
         if not event.is_directory:
             add_index_job(adjust_path(event.src_path))
 
-
-def adjust_path(path):
-    if platform.system() == "Windows":
-        return path.replace("/", "\\").capitalize()
-    return path
