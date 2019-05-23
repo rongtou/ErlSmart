@@ -1,6 +1,8 @@
 import os
+import sublime
 import sublime_plugin
 from .core.main import startup, shutdown
+import ErlSmart.core.global_vars as gv
 
 
 def plugin_loaded():
@@ -20,6 +22,23 @@ def plugin_unloaded():
 #         monitor.add_path("e:\\Work\\xw01\\config")
 
 class ErlListener(sublime_plugin.EventListener):
+
+    def on_query_completions(self, view, prefix, locations):
+        if not view.match_selector(locations[0], "source.erlang"):
+            return None
+
+        point = locations[0] - len(prefix) - 1
+        letter = view.substr(point)
+
+        if letter == ':':
+            module_name = view.substr(view.word(point))
+            completions = gv.get('cache').get_completions(module_name)
+            return (
+                completions,
+                sublime.INHIBIT_WORD_COMPLETIONS | sublime.INHIBIT_EXPLICIT_COMPLETIONS
+            )
+        else:
+            return None
 
     def on_window_command(self, window, command_name, args):
         # if command_name == 'remove_folder':

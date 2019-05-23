@@ -82,10 +82,24 @@ class Cache(object):
         else:
             return ret[0] != modified
 
-    def close(self):
-        for i in range(self.__pool_size):
-            con = self.__pool.get()
-            con.close()
+    def get_completions(self, mod):
+        completions = []
+        con = self.get_con()
+        cur = con.cursor()
+        ret = []
+        try:
+            cur.execute("select fun, arity, args from erl_file where mod=? order by fun, arity", (mod,))
+            ret = cur.fetchall()
+        except sqlite3.Error:
+            traceback.print_exc()
+        finally:
+            self.release_con(con)
+
+        for (fun, arity, args) in ret:
+            completion = '{0}({1})'.format(fun, args)
+            completions.append(['{}/{}\tMethod'.format(fun, arity), completion])
+
+        return completions
 
 
 class CacheWriter(Thread):
@@ -131,6 +145,7 @@ class CacheWriter(Thread):
                 logging.debug("index update %s", path)
                 self.__cur.execute("update file_path set updated_at = ? where fid = ?", (modified, fid))
             self.__cur.execute("delete from erl_file where fid=?", (fid,))
+            logging.debug("index %s\n %s", path, parse_obj)
             mod = parse_obj['mod']
             for funobj in parse_obj['func']:
                 logging.debug("index %s %s", mod, funobj['name'])

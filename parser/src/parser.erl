@@ -21,12 +21,17 @@ main(File) ->
 %% INTERNAL functions
 %%====================================================================
 run(File) ->
-    case epp_dodger:quick_parse_file(File) of
+    case epp_dodger:quick_parse_file(File, [{clever, true}]) of
         {ok, Forms} ->
-            Chunks = erl_syntax:revert_forms(Forms),
-            Result = walk_ast(Chunks),
-            io:format("~s", [jsx:encode(Result)]),
-            ok;
+            case catch erl_syntax:revert_forms(Forms) of
+                 Chunks when is_list(Chunks) ->
+                     Result = walk_ast(Chunks),
+                     io:format("~s", [jsx:encode(Result)]),
+                     ok;
+                 _Err ->
+%%                     io:format("run 1 ~p~n", [_Err]),
+                     none
+            end;
         _ ->
             none
     end.
