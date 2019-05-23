@@ -11,9 +11,9 @@ def add_index_job(file_path: str):
         pool.submit(do_index, file_path)
 
 
-def del_index_job(file_path: str):
+def del_index_job(file_path: str, is_dir: bool):
     pool = gv.get('pool')
-    pool.submit(do_del, file_path)
+    pool.submit(do_del, file_path, is_dir)
 
 
 def do_index(file_path: str):
@@ -28,5 +28,5 @@ def do_index(file_path: str):
             logging.debug("can not parser: %s", file_path)
 
 
-def do_del(file_path: str):
-    gv.get('writer').add_req("del", file_path)
+def do_del(file_path: str, is_dir: bool):
+    gv.get('writer').add_req("del", (file_path, is_dir))

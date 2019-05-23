@@ -32,7 +32,7 @@ class ErlFileEventHandler(FileSystemEventHandler):
         # what = 'directory' if event.is_directory else 'file'
         # logging.info("Moved %s: from %s to %s", what, event.src_path,
         #              event.dest_path)
-        del_index_job(adjust_path(event.src_path))
+        del_index_job(adjust_path(event.src_path), event.is_directory)
 
     def on_created(self, event):
         # what = 'directory' if event.is_directory else 'file'
@@ -43,7 +43,7 @@ class ErlFileEventHandler(FileSystemEventHandler):
     def on_deleted(self, event):
         # what = 'directory' if event.is_directory else 'file'
         # logging.info("Deleted %s: %s", what, event.src_path)
-        del_index_job(adjust_path(event.src_path))
+        del_index_job(adjust_path(event.src_path), event.is_directory)
 
     def on_modified(self, event):
         what = 'directory' if event.is_directory else 'file'

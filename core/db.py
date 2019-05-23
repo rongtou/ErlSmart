@@ -143,18 +143,19 @@ class CacheWriter(Thread):
             self.__con.rollback()
             traceback.print_exc()
 
-    def del_index(self, path: str):
-        logging.debug("del index ", path)
+    def del_index(self, param):
+        path, is_dir = param
+        logging.debug("del index %s %s", path, is_dir)
         root, ext = os.path.splitext(path)
         try:
-            if ext == ".erl":
+            if not is_dir and ext == ".erl":
                 encrypt = hashlib.md5()
                 encrypt.update(path.encode("utf-8"))
                 fid = encrypt.hexdigest()
                 self.__cur.execute("delete from file_path where fid=?", (fid,))
                 self.__cur.execute("delete from erl_file where fid=?", (fid,))
                 self.__con.commit()
-            elif ext == "":
+            elif is_dir:
                 if platform.system() == "Windows":
                     path = path + "\\"
                 else:
