@@ -17,13 +17,11 @@ class Monitor(object):
             self.__observer.start()
 
     def add_path(self, path):
-        print(path)
         event_handler = ErlFileEventHandler()
         watch = self.__observer.schedule(event_handler, path, recursive=True)
         self.__wawtches[path] = watch
 
     def remove_path(self, path):
-        print(self.__wawtches)
         watch = self.__wawtches.pop(path)
         self.__observer.unschedule(watch)
 

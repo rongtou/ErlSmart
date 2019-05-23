@@ -15,20 +15,12 @@ def plugin_unloaded():
     shutdown()
 
 
-# class ExampleCommand(sublime_plugin.TextCommand):
-#
-#     def run(self, edit):
-#         for i in range(10):
-#             add_task(i)
-#         monitor.add_path("e:\\Work\\xw01\\config")
-
 class ErlListener(sublime_plugin.EventListener):
 
     def on_query_completions(self, view, prefix, locations):
         if not view.match_selector(locations[0], "source.erlang"):
             return None
 
-        print()
         point = locations[0] - len(prefix) - 1
         letter = view.substr(point)
 
