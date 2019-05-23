@@ -26,6 +26,7 @@ def do_index(file_path: str):
             gv.get('writer').add_req("index", (file_path, obj))
         else:
             logging.debug("can not parser: %s", file_path)
+    pass
 
 
 def do_del(file_path: str, is_dir: bool):

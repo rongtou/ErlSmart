@@ -44,6 +44,7 @@ class ErlListener(sublime_plugin.EventListener):
                 return None
 
     def on_window_command(self, window, command_name, args):
+        # print(command_name, args)
         if command_name == 'remove_folder':
             for path in args['dirs']:
                 gv.get('monitor').remove_path(path)
