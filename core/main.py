@@ -38,8 +38,15 @@ def start_parserv():
 
 
 def start_parserv2():
-    logging.error("start")
-    subprocess.Popen(r'''erl -boot start_sasl -noshell -noinput -pa parserv/_build/default/lib/parserv/ebin -pa parserv/_build/default/lib/cowboy/ebin -pa parserv/_build/default/lib/cowlib/ebin -pa parserv/_build/default/lib/jsx/ebin -pa parserv/_build/default/lib/ranch/ebin -s parserv_main''', stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, stdin=subprocess.DEVNULL, shell=True).communicate()
+    logging.error("start server")
+    subprocess.Popen(['erl', '-boot', 'start_sasl', '-noshell', '-noinput',
+                      '-pa', 'parserv/_build/default/lib/parserv/ebin',
+                      '-pa', 'parserv/_build/default/lib/cowboy/ebin',
+                      '-pa', 'parserv/_build/default/lib/cowlib/ebin',
+                      '-pa', 'parserv/_build/default/lib/jsx/ebin',
+                      '-pa', 'parserv/_build/default/lib/ranch/ebin',
+                      '-s', 'parserv_main'], stdout=subprocess.DEVNULL,
+                     stderr=subprocess.DEVNULL, stdin=subprocess.DEVNULL, shell=True).communicate()
 
 
 def start_monitor():
