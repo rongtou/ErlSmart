@@ -1,12 +1,10 @@
 .rebar3
-_*
 .eunit
 *.o
 *.plt
 *.swp
 *.swo
 .erlang.cookie
-ebin
 log
 erl_crash.dump
 .rebar
