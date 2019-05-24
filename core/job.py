@@ -27,7 +27,6 @@ def do_index(file_path: str):
         data = f.read().decode('utf-8')
         obj = json.loads(data)
         if obj['code'] == "ok" and obj['data'] != "":
-            print("ok", file_path)
             gv.get('writer').add_req("index", (file_path, obj['data']))
         else:
             logging.debug("can not parser: %s", file_path)

@@ -26,7 +26,7 @@ def shutdown():
 
 
 def init_log():
-    logging.basicConfig(level=logging.DEBUG,
+    logging.basicConfig(level=logging.ERROR,
                         format='%(asctime)s - %(message)s',
                         datefmt='%Y-%m-%d %H:%M:%S')
 
@@ -38,7 +38,7 @@ def start_parserv():
 
 
 def start_parserv2():
-    print(22222)
+    logging.error("start")
     subprocess.Popen(r'''erl -boot start_sasl -noshell -noinput -pa parserv/_build/default/lib/parserv/ebin -pa parserv/_build/default/lib/cowboy/ebin -pa parserv/_build/default/lib/cowlib/ebin -pa parserv/_build/default/lib/jsx/ebin -pa parserv/_build/default/lib/ranch/ebin -s parserv_main''', stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, stdin=subprocess.DEVNULL, shell=True).communicate()
 
 
@@ -49,7 +49,7 @@ def start_monitor():
 
 
 def init_pool():
-    gv.put('pool', ThreadPoolExecutor(8))
+    gv.put('pool', ThreadPoolExecutor(1))
 
 
 def scan_file():
