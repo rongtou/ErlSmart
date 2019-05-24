@@ -8,7 +8,7 @@ import platform
 import traceback
 from threading import Thread
 
-cache_file = "cache/cache.db"
+index_file = "index/index.db"
 
 CREATE_FOLDER_SQL = '''
 create table if not exists file_path (
@@ -34,23 +34,25 @@ create table if not exists erl_file (
 
 
 def init_db():
-    cache = Cache()
-    gv.set_index_reader(cache)
-    cache.create_table()
-    writer = CacheWriter()
+    reader = IndexReader()
+    gv.set_index_reader(reader)
+    reader.create_table()
+    writer = IndexWriter()
     gv.set_index_writer(writer)
 
 
-class Cache(object):
+class IndexReader(object):
 
     def __init__(self):
+        if not os.path.exists("index"):
+            os.makedirs("index")
         self.__pool_size = 10
         self.__pool = queue.Queue(self.__pool_size)
         self._create_con()
 
     def _create_con(self):
         for i in range(self.__pool_size):
-            con = sqlite3.connect(cache_file, check_same_thread=False)
+            con = sqlite3.connect(index_file, check_same_thread=False)
             con.execute('pragma journal_mode=wal')
             self.__pool.put(con)
 
@@ -135,11 +137,11 @@ class Cache(object):
         return paths
 
 
-class CacheWriter(Thread):
+class IndexWriter(Thread):
 
     def __init__(self):
-        super(CacheWriter, self).__init__()
-        self.__con = sqlite3.connect(cache_file, check_same_thread=False)
+        super(IndexWriter, self).__init__()
+        self.__con = sqlite3.connect(index_file, check_same_thread=False)
         self.__con.execute('pragma journal_mode=wal')
         self.__cur = self.__con.cursor()
         self.__reqs = queue.Queue()
