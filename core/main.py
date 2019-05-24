@@ -60,7 +60,7 @@ def scan_file():
 
 def scan():
     erl_lib = subprocess.getoutput("escript core/erl_lib.erl")
-    all_folders = [adjust_path(erl_lib)]  # + get_folders()
+    all_folders = [adjust_path(erl_lib)] + get_folders()
     for path in all_folders:
         for file_path, dirs, files in os.walk(path):
             for f in files:

@@ -31,7 +31,22 @@ start_link() ->
 %% Before OTP 18 tuples must be used to specify a child. e.g.
 %% Child :: {Id,StartFunc,Restart,Shutdown,Type,Modules}
 init([]) ->
-    {ok, {{one_for_all, 0, 1}, []}}.
+    SupFlags = #{
+        strategy  => one_for_one,
+        intensity => 10,
+        period    => 5
+    },
+    ChildSpecs = [
+        #{
+            id       => sublime_monitor,
+            start    => {sublime_monitor, start_link, []},
+            restart  => permanent,
+            shutdown => 5000,
+            type     => worker,
+            modules  => [sublime_monitor]
+        }
+    ],
+    {ok, {SupFlags, ChildSpecs}}.
 
 %%====================================================================
 %% Internal functions
