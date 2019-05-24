@@ -17,13 +17,29 @@ class Monitor(object):
             self.__observer.start()
 
     def add_path(self, path):
-        event_handler = ErlFileEventHandler()
-        watch = self.__observer.schedule(event_handler, path, recursive=True)
-        self.__wawtches[path] = watch
+        if self.__wawtches.__contains__(path):
+            return False
+        else:
+            event_handler = ErlFileEventHandler()
+            watch = self.__observer.schedule(event_handler, path, recursive=True)
+            self.__wawtches[path] = watch
+            return True
 
     def remove_path(self, path):
         watch = self.__wawtches.pop(path)
         self.__observer.unschedule(watch)
+
+    def update_paths(self, paths):
+        all_paths = []
+        for path in paths:
+            if self.add_path(path):
+                all_paths.append(path)
+
+        removes = list(set(self.__wawtches.keys()).difference(set(paths)))
+        for r in removes:
+            self.remove_path(r)
+
+        return all_paths
 
     def shutdown(self):
         if self.__observer.isAlive():

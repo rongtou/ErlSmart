@@ -2,7 +2,8 @@ import os
 import re
 import sublime
 import sublime_plugin
-from .core.main import startup, shutdown
+from .core.main import startup, shutdown, scan
+from .core.utils import get_folders
 import ErlSmart.core.global_vars as gv
 
 
@@ -43,8 +44,15 @@ class ErlListener(sublime_plugin.EventListener):
             else:
                 return None
 
+    def on_load(self, view):
+        # handle open new project or folder
+        if gv.get('monitor'):
+            all_folders = gv.get('monitor').update_paths(get_folders())
+            if all_folders:
+                sublime.set_timeout_async(lambda: scan(all_folders), 100)
+
     def on_window_command(self, window, command_name, args):
-        # print(command_name, args)
+        print("windows ", command_name, args)
         if command_name == 'remove_folder':
             for path in args['dirs']:
                 gv.get('monitor').remove_path(path)

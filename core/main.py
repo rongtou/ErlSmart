@@ -34,7 +34,6 @@ def init_log():
 def start_parserv():
     t = threading.Thread(target=start_parserv2, name='ParserServer')
     t.start()
-    # sublime.set_timeout_async(lambda: start_parserv2(), 10)
 
 
 def start_parserv2():
@@ -53,14 +52,12 @@ def init_pool():
 
 
 def scan_file():
-    t = threading.Thread(target=scan, name='ScanFile')
-    t.start()
-    # sublime.set_timeout_async(lambda: scan(all_folders), 100)
-
-
-def scan():
     erl_lib = subprocess.getoutput("escript core/erl_lib.erl")
     all_folders = [adjust_path(erl_lib)] + get_folders()
+    sublime.set_timeout_async(lambda: scan(all_folders), 100)
+
+
+def scan(all_folders: list):
     for path in all_folders:
         for file_path, dirs, files in os.walk(path):
             for f in files:
