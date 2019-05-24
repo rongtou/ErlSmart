@@ -27,14 +27,27 @@ handle_cast(_Msg, State) ->
     {noreply, State}.
 
 handle_info(check, State) ->
-    Ret = os:cmd("wmic process where caption=\"sublime_text.exe\" get Handle"),
-    case hd(Ret) == $H of
-        true ->
-            erlang:send_after(1000, self(), check),
-            {noreply, State};
-        false ->
-            init:stop(),
-            {noreply, State}
+    case os:type() of
+        {win32, _} ->
+            Ret = os:cmd("wmic process where caption=\"sublime_text.exe\" get Handle"),
+            case hd(Ret) == $H of
+                true ->
+                    erlang:send_after(1000, self(), check),
+                    {noreply, State};
+                false ->
+                    init:stop(),
+                    {noreply, State}
+            end;
+        _ ->
+            Ret = os:cmd("ps -A | grep sublime"),
+            case Ret =/= [] of
+                true ->
+                    erlang:send_after(1000, self(), check),
+                    {noreply, State};
+                false ->
+                    init:stop(),
+                    {noreply, State}
+            end
     end;
 
 handle_info(_Info, State) ->
