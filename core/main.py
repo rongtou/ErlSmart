@@ -7,7 +7,7 @@ import ErlSmart.core.global_vars as gv
 from concurrent.futures import ThreadPoolExecutor
 from .monitor import Monitor
 from .db import init_db
-from .job import add_index_job
+from .job import add_index_job, del_index_job
 from .utils import get_folders, adjust_path
 
 
@@ -15,14 +15,15 @@ def startup():
     init_log()
     init_db()
     start_parserv()
-    start_monitor()
     init_pool()
+    start_monitor()
     scan_file()
+    del_outdated_index()
 
 
 def shutdown():
-    gv.get('monitor').shutdown()
-    gv.get('pool').shutdown()
+    gv.monitor().shutdown()
+    gv.pool().shutdown()
 
 
 def init_log():
@@ -44,11 +45,11 @@ def start_parserv2():
 def start_monitor():
     monitor = Monitor()
     monitor.start()
-    gv.put('monitor', monitor)
+    gv.set_monitor(monitor)
 
 
 def init_pool():
-    gv.put('pool', ThreadPoolExecutor(1))
+    gv.set_pool(ThreadPoolExecutor(1))
 
 
 def scan_file():
@@ -63,3 +64,14 @@ def scan(all_folders: list):
             for f in files:
                 filename = os.path.join(file_path, f)
                 add_index_job(filename)
+
+
+def del_outdated_index():
+    sublime.set_timeout_async(lambda: del_outdated_index2(), 60000)
+
+
+def del_outdated_index2():
+    paths = gv.index_reader().get_paths()
+    for path in paths:
+        if not os.path.exists(path):
+            del_index_job(path, True)

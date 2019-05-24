@@ -35,10 +35,10 @@ create table if not exists erl_file (
 
 def init_db():
     cache = Cache()
-    gv.put('cache', cache)
+    gv.set_index_reader(cache)
     cache.create_table()
     writer = CacheWriter()
-    gv.put('writer', writer)
+    gv.set_index_writer(writer)
 
 
 class Cache(object):
@@ -116,6 +116,23 @@ class Cache(object):
         for (mod,) in ret:
             completions.append(['{}\tModule'.format(mod), mod])
         return completions
+
+    def get_paths(self):
+        paths = []
+        con = self.get_con()
+        cur = con.cursor()
+        ret = []
+        try:
+            cur.execute("select path from file_path")
+            ret = cur.fetchall()
+        except sqlite3.Error:
+            traceback.print_exc()
+        finally:
+            self.release_con(con)
+
+        for (p,) in ret:
+            paths.append(p)
+        return paths
 
 
 class CacheWriter(Thread):

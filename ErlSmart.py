@@ -27,7 +27,7 @@ class ErlListener(sublime_plugin.EventListener):
 
         if letter == ':':
             module_name = view.substr(view.word(point))
-            completions = gv.get('cache').get_completions(module_name)
+            completions = gv.index_reader().get_completions(module_name)
             if completions:
                 return (
                     completions,
@@ -40,14 +40,14 @@ class ErlListener(sublime_plugin.EventListener):
                 )
         else:
             if re.match('^[0-9a-z_]+$', prefix) and len(prefix) > 1:
-                return gv.get('cache').get_mods() + gv.get('cache').get_completions('erlang')
+                return gv.index_reader().get_mods() + gv.index_reader().get_completions('erlang')
             else:
                 return None
 
     def on_load(self, view):
         # handle open new project or folder
-        if gv.get('monitor'):
-            all_folders = gv.get('monitor').update_paths(get_folders())
+        if gv.monitor():
+            all_folders = gv.monitor().update_paths(get_folders())
             if all_folders:
                 sublime.set_timeout_async(lambda: scan(all_folders), 100)
 
@@ -55,8 +55,8 @@ class ErlListener(sublime_plugin.EventListener):
         print("windows ", command_name, args)
         if command_name == 'remove_folder':
             for path in args['dirs']:
-                gv.get('monitor').remove_path(path)
-                gv.get('writer').add_req("del", (path, True))
+                gv.monitor().remove_path(path)
+                gv.index_writer().add_req("del", (path, True))
 
     def on_text_command(self, view, command_name, args):
         # 右键菜单 goto
