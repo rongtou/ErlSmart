@@ -10,7 +10,7 @@ def get_folders():
 
 
 def adjust_path(path: str):
-    if platform.system() == "Windows".upper():
+    if platform.system() == "Windows":
         path_list = path.replace("/", "\\").split("\\")
         path_list[0] = path_list[0].capitalize()
         return "\\".join(path_list)

@@ -161,7 +161,6 @@ class CacheWriter(Thread):
                 logging.debug("index update %s", path)
                 self.__cur.execute("update file_path set updated_at = ? where fid = ?", (modified, fid))
             self.__cur.execute("delete from erl_file where fid=?", (fid,))
-            logging.debug("index %s\n %s", path, parse_obj)
             mod = parse_obj['mod']
             for funobj in parse_obj['func']:
                 logging.debug("index %s %s", mod, funobj['name'])

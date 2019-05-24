@@ -1,0 +1,1 @@
+erl -boot start_sasl -noinput -detached -pa parserv/_build/default/lib/parserv/ebin -pa parserv/_build/default/lib/cowboy/ebin -pa parserv/_build/default/lib/cowlib/ebin  -pa parserv/_build/default/lib/jsx/ebin -pa parserv/_build/default/lib/ranch/ebin -s parserv_main
