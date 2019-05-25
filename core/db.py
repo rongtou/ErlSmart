@@ -7,6 +7,7 @@ import os
 import platform
 import traceback
 from threading import Thread
+from .utils import path_in_cur_folders
 
 index_file = "index/index.db"
 
@@ -90,16 +91,17 @@ class IndexReader(object):
         cur = con.cursor()
         ret = []
         try:
-            cur.execute("select fun, arity, args from erl_file where mod=? and exported = 1 order by fun, arity", (mod,))
+            cur.execute("select path, fun, arity, args from erl_file e join file_path f on e.fid = f.fid where mod=? and exported = 1 order by fun, arity", (mod,))
             ret = cur.fetchall()
         except sqlite3.Error:
             traceback.print_exc()
         finally:
             self.release_con(con)
 
-        for (fun, arity, args) in ret:
-            completion = '{0}({1})'.format(fun, args)
-            completions.append(['{}/{}\tMethod'.format(fun, arity), completion])
+        for (path, fun, arity, args) in ret:
+            if path_in_cur_folders(path):
+                completion = '{0}({1})'.format(fun, args)
+                completions.append(['{}/{}\tMethod'.format(fun, arity), completion])
         return completions
 
     def get_mods(self):
@@ -108,15 +110,16 @@ class IndexReader(object):
         cur = con.cursor()
         ret = []
         try:
-            cur.execute("select distinct(mod) from erl_file order by mod")
+            cur.execute("select path, mod from file_path as f left join (select fid, mod from erl_file group by fid, mod) as e on e.fid = f.fid where mod is not null")
             ret = cur.fetchall()
         except sqlite3.Error:
             traceback.print_exc()
         finally:
             self.release_con(con)
 
-        for (mod,) in ret:
-            completions.append(['{}\tModule'.format(mod), mod])
+        for (path, mod) in ret:
+            if path_in_cur_folders(path):
+                completions.append(['{}\tModule'.format(mod), mod])
         return completions
 
     def get_paths(self):

@@ -45,3 +45,10 @@ def pool():
 def set_pool(pool):
     put('pool', pool)
 
+
+def erl_lib():
+    return get('erl_lib')
+
+
+def set_erl_lib(path):
+    put('erl_lib', path)

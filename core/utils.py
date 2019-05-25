@@ -1,5 +1,6 @@
 import sublime
 import platform
+import ErlSmart.core.global_vars as gv
 
 
 def get_folders():
@@ -15,3 +16,14 @@ def adjust_path(path: str):
         path_list[0] = path_list[0].capitalize()
         return "\\".join(path_list)
     return path
+
+
+def cur_folders():
+    return [gv.erl_lib()] + sublime.active_window().folders()
+
+
+def path_in_cur_folders(path):
+    for folder in cur_folders():
+        if path.startswith(folder):
+            return True
+    return False

@@ -38,7 +38,7 @@ def start_parserv():
 
 
 def start_parserv2():
-    logging.error("start server")
+    logging.info("start server")
     subprocess.Popen(['erl', '-boot', 'start_sasl', '-noshell', '-noinput',
                       '-pa', 'parserv/_build/default/lib/parserv/ebin',
                       '-pa', 'parserv/_build/default/lib/cowboy/ebin',
@@ -60,8 +60,9 @@ def init_pool():
 
 
 def scan_file():
-    erl_lib = subprocess.getoutput("escript core/erl_lib.erl")
-    all_folders = [adjust_path(erl_lib)] + get_folders()
+    erl_lib = adjust_path(subprocess.getoutput("escript core/erl_lib.erl"))
+    gv.set_erl_lib(erl_lib)
+    all_folders = [erl_lib] + get_folders()
     sublime.set_timeout_async(lambda: scan(all_folders), 100)
 
 
