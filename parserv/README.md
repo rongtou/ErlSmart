@@ -1,7 +1,7 @@
 parserv
 =====
 
-An OTP application
+Erlang code parser server
 
 Build
 -----
