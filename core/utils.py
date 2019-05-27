@@ -18,12 +18,9 @@ def adjust_path(path: str):
     return path
 
 
-def cur_folders():
-    return [gv.erl_lib()] + sublime.active_window().folders()
-
-
 def path_in_cur_folders(path):
-    for folder in cur_folders():
+    folders = [gv.erl_lib()] + sublime.active_window().folders()
+    for folder in folders:
         if path.startswith(folder):
             return True
     return False

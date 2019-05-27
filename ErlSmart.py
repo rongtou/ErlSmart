@@ -4,6 +4,7 @@ import sublime
 import sublime_plugin
 from .core.main import startup, shutdown, scan
 from .core.utils import get_folders
+from .core.smart_goto import SmartGoto
 import ErlSmart.core.global_vars as gv
 
 
@@ -60,5 +61,54 @@ class ErlListener(sublime_plugin.EventListener):
 
     def on_text_command(self, view, command_name, args):
         # 右键菜单 goto
-        # print("text ", command_name, args)
+        print("text ", command_name, args)
         pass
+
+
+PREFIX_MAP = [
+    ('Function',  'meta.function.erlang'),
+    ('Function',  'meta.function.module.erlang'),
+    ('Function',  'entity.name.function.erlang'),
+    ('Function',  'entity.name.function.definition.erlang'),
+    ('Type',      'storage.type.erlang'),
+    ('Type',      'storage.type.module.erlang'),
+    ('Type',      'storage.type.definition.erlang'),
+    ('Record',    'storage.type.record.erlang'),
+    ('Record',    'storage.type.record.definition.erlang'),
+    ('Macro',     'keyword.other.macro.erlang'),
+    ('Module',    'entity.name.type.class.module.erlang'),
+    ('Yecc Rule', 'entity.name.token.unquoted.yecc'),
+    ('Yecc Rule', 'entity.name.token.quoted.yecc')
+]
+
+
+class SmartGotoCommand(sublime_plugin.WindowCommand):
+
+    def run(self):
+        view = sublime.active_window().active_view()
+        point = view.sel()[0].begin()
+        scope = view.scope_name(point)
+        symbol = view.substr(view.word(point))
+
+        scores = map(lambda s: sublime.score_selector(scope, s[1]), PREFIX_MAP)
+        (maxscore, match) = max(zip(scores, PREFIX_MAP), key=lambda z: z[0])
+        kind = match[0]
+
+        if maxscore == 0:
+            gotosym = symbol
+        elif kind == 'Macro':
+            gotosym = kind + ': ' + strip_before('?', symbol)
+        elif kind == 'Record':
+            gotosym = kind + ': ' + strip_before('#', symbol)
+        elif kind == 'Function':
+            return SmartGoto(view).run(kind, point)
+        elif kind == 'Type':
+            return SmartGoto(view).run(kind, point)
+        else:
+            gotosym = kind + ': ' + symbol
+        return sublime.active_window().run_command('goto_definition', {'symbol': gotosym})
+
+
+def strip_before(char, s):
+    pos = s.find(char)
+    return s[pos+1:]

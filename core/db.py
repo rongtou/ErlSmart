@@ -139,6 +139,20 @@ class IndexReader(object):
             paths.append(p)
         return paths
 
+    def find_fun(self, mod, fun):
+        options = []
+        con = self.get_con()
+        cur = con.cursor()
+        try:
+            cur.execute("select mod, fun, arity, line, path from erl_file e join file_path f on e.fid = f.fid  where mod=? and fun = ? order by arity", (mod, fun))
+            options = cur.fetchall()
+        except sqlite3.Error:
+            traceback.print_exc()
+        finally:
+            self.release_con(con)
+
+        return options
+
 
 class IndexWriter(Thread):
 
