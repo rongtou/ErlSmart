@@ -47,7 +47,7 @@ class IndexReader(object):
     def __init__(self):
         if not os.path.exists("index"):
             os.makedirs("index")
-        self.__pool_size = 10
+        self.__pool_size = 5
         self.__pool = queue.Queue(self.__pool_size)
         self._create_con()
 

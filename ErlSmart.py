@@ -53,16 +53,11 @@ class ErlListener(sublime_plugin.EventListener):
                 sublime.set_timeout_async(lambda: scan(all_folders), 100)
 
     def on_window_command(self, window, command_name, args):
-        print("windows ", command_name, args)
+        # print("windows ", command_name, args)
         if command_name == 'remove_folder':
             for path in args['dirs']:
                 gv.monitor().remove_path(path)
                 gv.index_writer().add_req("del", (path, True))
-
-    def on_text_command(self, view, command_name, args):
-        # 右键菜单 goto
-        print("text ", command_name, args)
-        pass
 
 
 PREFIX_MAP = [

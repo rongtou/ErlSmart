@@ -3,11 +3,10 @@
 -export([start/0]).
 
 start() ->
-    try
-        application:ensure_all_started(ranch),
-        application:ensure_all_started(parserv)
-    catch
+    case gen_tcp:connect("127.0.0.1", 48437, []) of
+        {ok, _} ->
+            erlang:halt();
         _ ->
-            init:stop()
+            application:ensure_all_started(ranch),
+            application:ensure_all_started(parserv)
     end.
-
