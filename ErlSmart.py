@@ -61,17 +61,17 @@ class ErlListener(sublime_plugin.EventListener):
 
 
 PREFIX_MAP = [
-    ('Function',  'meta.function.erlang'),
-    ('Function',  'meta.function.module.erlang'),
-    ('Function',  'entity.name.function.erlang'),
-    ('Function',  'entity.name.function.definition.erlang'),
-    ('Type',      'storage.type.erlang'),
-    ('Type',      'storage.type.module.erlang'),
-    ('Type',      'storage.type.definition.erlang'),
-    ('Record',    'storage.type.record.erlang'),
-    ('Record',    'storage.type.record.definition.erlang'),
-    ('Macro',     'keyword.other.macro.erlang'),
-    ('Module',    'entity.name.type.class.module.erlang'),
+    ('Function', 'meta.function.erlang'),
+    ('Function', 'meta.function.module.erlang'),
+    ('Function', 'entity.name.function.erlang'),
+    ('Function', 'entity.name.function.definition.erlang'),
+    ('Type', 'storage.type.erlang'),
+    ('Type', 'storage.type.module.erlang'),
+    ('Type', 'storage.type.definition.erlang'),
+    ('Record', 'storage.type.record.erlang'),
+    ('Record', 'storage.type.record.definition.erlang'),
+    ('Macro', 'keyword.other.macro.erlang'),
+    ('Module', 'entity.name.type.class.module.erlang'),
     ('Yecc Rule', 'entity.name.token.unquoted.yecc'),
     ('Yecc Rule', 'entity.name.token.quoted.yecc')
 ]
@@ -106,4 +106,4 @@ class SmartGotoCommand(sublime_plugin.WindowCommand):
 
 def strip_before(char, s):
     pos = s.find(char)
-    return s[pos+1:]
+    return s[pos + 1:]

@@ -1,0 +1,7 @@
+[
+    {"command": "smart_goto", "keys": ["f2"],
+        "context": [
+            {"key": "selector", "operator": "equal", "operand":  "source.erlang"}
+        ]
+    }
+]
