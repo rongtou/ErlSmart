@@ -1,19 +1,20 @@
 import sublime
 import logging
 import os
+import platform
 import subprocess
 import threading
 import ErlSmart.core.global_vars as gv
 from concurrent.futures import ThreadPoolExecutor
 from .monitor import Monitor
-from .db import init_db
+from .index import init_index
 from .job import add_index_job, del_index_job
 from .utils import get_folders, adjust_path
 
 
 def startup():
     init_log()
-    init_db()
+    init_index()
     start_parserv()
     init_pool()
     start_monitor()
@@ -27,7 +28,7 @@ def shutdown():
 
 
 def init_log():
-    logging.basicConfig(level=logging.ERROR,
+    logging.basicConfig(level=logging.WARNING,
                         format='%(asctime)s - %(message)s',
                         datefmt='%Y-%m-%d %H:%M:%S')
 
@@ -39,14 +40,23 @@ def start_parserv():
 
 def start_parserv2():
     logging.info("start server")
-    subprocess.Popen(['erl', '-boot', 'start_sasl', '-noshell', '-noinput',
-                      '-pa', 'parserv/_build/default/lib/parserv/ebin',
-                      '-pa', 'parserv/_build/default/lib/cowboy/ebin',
-                      '-pa', 'parserv/_build/default/lib/cowlib/ebin',
-                      '-pa', 'parserv/_build/default/lib/jsx/ebin',
-                      '-pa', 'parserv/_build/default/lib/ranch/ebin',
-                      '-s', 'parserv_main'], stdout=subprocess.DEVNULL,
-                     stderr=subprocess.DEVNULL, stdin=subprocess.DEVNULL, shell=True).communicate()
+    if platform.system() == "Windows":
+        subprocess.Popen(['erl', '-boot', 'start_sasl', '-noshell', '-noinput',
+                          '-pa', 'parserv/_build/default/lib/parserv/ebin',
+                          '-pa', 'parserv/_build/default/lib/cowboy/ebin',
+                          '-pa', 'parserv/_build/default/lib/cowlib/ebin',
+                          '-pa', 'parserv/_build/default/lib/jsx/ebin',
+                          '-pa', 'parserv/_build/default/lib/ranch/ebin',
+                          '-s', 'parserv_main'], stdout=subprocess.DEVNULL,
+                         stderr=subprocess.DEVNULL, stdin=subprocess.DEVNULL, shell=True).communicate()
+    else:
+        subprocess.Popen(['erl', '-boot', 'start_sasl', '-noshell', '-noinput',
+                          '-pa', 'parserv/_build/default/lib/parserv/ebin',
+                          '-pa', 'parserv/_build/default/lib/cowboy/ebin',
+                          '-pa', 'parserv/_build/default/lib/cowlib/ebin',
+                          '-pa', 'parserv/_build/default/lib/jsx/ebin',
+                          '-pa', 'parserv/_build/default/lib/ranch/ebin',
+                          '-s', 'parserv_main']).communicate()
 
 
 def start_monitor():

@@ -39,8 +39,8 @@ handle_info(check, State) ->
                     {noreply, State}
             end;
         _ ->
-            Ret = os:cmd("ps -A | grep sublime"),
-            case Ret =/= [] of
+            Ret = os:cmd("ps -A | grep Sublime"),
+            case length(string:tokens(Ret, "\n")) > 1 of
                 true ->
                     erlang:send_after(1000, self(), check),
                     {noreply, State};

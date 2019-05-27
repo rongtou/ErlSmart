@@ -34,7 +34,7 @@ create table if not exists erl_file (
 '''
 
 
-def init_db():
+def init_index():
     reader = IndexReader()
     gv.set_index_reader(reader)
     reader.create_table()
