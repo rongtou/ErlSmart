@@ -102,7 +102,10 @@ class IndexReader(object):
 
         for (path, fun, arity, args) in ret:
             if path_in_cur_folders(path):
-                completion = '{0}({1})'.format(fun, args)
+                arglist = args.split(", ")
+                param_list = ['${{{0}:{1}}}'.format(i + 1, arglist[i]) for i in range(arity)]
+                param_str = ', '.join(param_list)
+                completion = '{0}({1})${2}'.format(fun, param_str, arity + 1)
                 completions.append(['{}/{}\tMethod'.format(fun, arity), completion])
         return completions
 
