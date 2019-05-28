@@ -23,8 +23,12 @@ class SmartGoto(object):
             self.window.show_quick_panel(
                 list(map(lambda o: "{}:{}/{}:{}  {}".format(o[0], o[1], o[2], o[3], o[4]), self.options)), self.on_done)
         else:
-            # no exact matches, no module info: search for just the name
-            return self.window.run_command('goto_definition', {'symbol': kind + ': ' + funcname})
+            ret = gv.index_reader().find_mod(module)
+            if ret:
+                self.window.open_file('{0}:0'.format(ret[0]), sublime.ENCODED_POSITION)
+            else:
+                # no exact matches, no module info: search for just the name
+                self.window.run_command('goto_definition', {'symbol': kind + ': ' + funcname})
 
     def get_mod_fun(self, point):
         mod_name = file_module_name(self.view.file_name())

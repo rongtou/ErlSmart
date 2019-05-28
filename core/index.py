@@ -91,7 +91,9 @@ class IndexReader(object):
         cur = con.cursor()
         ret = []
         try:
-            cur.execute("select path, fun, arity, args from erl_file e join file_path f on e.fid = f.fid where mod=? and exported = 1 order by fun, arity", (mod,))
+            cur.execute(
+                "select path, fun, arity, args from erl_file e join file_path f on e.fid = f.fid where mod=? and exported = 1 order by fun, arity",
+                (mod,))
             ret = cur.fetchall()
         except sqlite3.Error:
             traceback.print_exc()
@@ -110,7 +112,8 @@ class IndexReader(object):
         cur = con.cursor()
         ret = []
         try:
-            cur.execute("select path, mod from file_path as f left join (select fid, mod from erl_file group by fid, mod) as e on e.fid = f.fid where mod is not null")
+            cur.execute(
+                "select path, mod from file_path as f left join (select fid, mod from erl_file group by fid, mod) as e on e.fid = f.fid where mod is not null")
             ret = cur.fetchall()
         except sqlite3.Error:
             traceback.print_exc()
@@ -144,7 +147,9 @@ class IndexReader(object):
         con = self.get_con()
         cur = con.cursor()
         try:
-            cur.execute("select mod, fun, arity, line, path from erl_file e join file_path f on e.fid = f.fid  where mod=? and fun = ? order by arity", (mod, fun))
+            cur.execute(
+                "select mod, fun, arity, line, path from erl_file e join file_path f on e.fid = f.fid  where mod=? and fun = ? order by arity",
+                (mod, fun))
             options = cur.fetchall()
         except sqlite3.Error:
             traceback.print_exc()
@@ -152,6 +157,20 @@ class IndexReader(object):
             self.release_con(con)
 
         return options
+
+    def find_mod(self, mod):
+        con = self.get_con()
+        cur = con.cursor()
+        ret = None
+        try:
+            cur.execute(
+                "select DISTINCT(path) from erl_file e join file_path f on e.fid = f.fid  where mod=?", (mod,))
+            ret = cur.fetchone()
+        except sqlite3.Error:
+            traceback.print_exc()
+        finally:
+            self.release_con(con)
+        return ret
 
 
 class IndexWriter(Thread):

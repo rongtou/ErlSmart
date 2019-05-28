@@ -101,7 +101,7 @@ class SmartGotoCommand(sublime_plugin.WindowCommand):
             return SmartGoto(view).run(kind, point)
         else:
             gotosym = kind + ': ' + symbol
-        return sublime.active_window().run_command('goto_definition', {'symbol': gotosym})
+        sublime.active_window().run_command('goto_definition', {'symbol': gotosym})
 
 
 def strip_before(char, s):
