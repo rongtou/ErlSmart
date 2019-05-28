@@ -25,17 +25,12 @@ def do_index(file_path: str):
         f = request.urlopen(r"http://127.0.0.1:48437/?%s" % params)
         data = f.read().decode('utf-8')
         obj = json.loads(data)
-        if obj['code'] == "ok" and obj['data'] != "":
+        # if obj['code'] == "ok" and obj['data'] != "":
+        # some file can't analyse, just ignore it
+        if obj['code'] != "parse_file_error":
             gv.index_writer().add_req("index", (file_path, obj['data']))
         else:
-            logging.debug("can not parser: %s", file_path)
-
-        # ret = subprocess.getoutput(r"escript parser/_build/default/bin/parser " + file_path)
-        # if ret != '':
-        #     obj = json.loads(ret)
-        #     gv.index_writer().add_req("index", (file_path, obj))
-        # else:
-        #     logging.debug("can not parser: %s", file_path)
+            logging.warning("can not parser: %s", file_path)
     pass
 
 

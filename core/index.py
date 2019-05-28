@@ -206,9 +206,7 @@ class IndexWriter(Thread):
             if not need_update:
                 return
 
-            encrypt = hashlib.md5()
-            encrypt.update(path.encode("utf-8"))
-            fid = encrypt.hexdigest()
+            fid = make_id(path)
             if ret is None:
                 logging.debug("index insert %s", path)
                 self.__cur.execute("insert into file_path(fid, path, updated_at) values(?,?,?)", (fid, path, modified))
@@ -216,13 +214,15 @@ class IndexWriter(Thread):
                 logging.debug("index update %s", path)
                 self.__cur.execute("update file_path set updated_at = ? where fid = ?", (modified, fid))
             self.__cur.execute("delete from erl_file where fid=?", (fid,))
-            mod = parse_obj['mod']
-            for funobj in parse_obj['func']:
-                logging.debug("index %s %s", mod, funobj['name'])
-                self.__cur.execute(
-                    "insert into erl_file(fid, mod, fun, arity, line, args, exported) values(?,?,?,?,?,?,?)",
-                    [fid, mod, funobj['name'], funobj['arity'], funobj['line'],
-                     ", ".join(funobj['args']), funobj['exported']])
+
+            if parse_obj != "":
+                mod = parse_obj['mod']
+                for funobj in parse_obj['func']:
+                    logging.debug("index %s %s", mod, funobj['name'])
+                    self.__cur.execute(
+                        "insert into erl_file(fid, mod, fun, arity, line, args, exported) values(?,?,?,?,?,?,?)",
+                        [fid, mod, funobj['name'], funobj['arity'], funobj['line'],
+                         ", ".join(funobj['args']), funobj['exported']])
             self.__con.commit()
         except sqlite3.Error:
             self.__con.rollback()
@@ -236,9 +236,8 @@ class IndexWriter(Thread):
                 root, ext = os.path.splitext(path)
                 if ext != ".erl":
                     return
-                encrypt = hashlib.md5()
-                encrypt.update(path.encode("utf-8"))
-                fid = encrypt.hexdigest()
+
+                fid = make_id(path)
                 self.__cur.execute("delete from file_path where fid=?", (fid,))
                 self.__cur.execute("delete from erl_file where fid=?", (fid,))
                 self.__con.commit()
@@ -260,3 +259,9 @@ class IndexWriter(Thread):
 
     def add_req(self, op, param):
         self.__reqs.put((op, param))
+
+
+def make_id(path: str):
+    encrypt = hashlib.md5()
+    encrypt.update(path.encode("utf-8"))
+    return encrypt.hexdigest()
