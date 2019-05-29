@@ -227,7 +227,7 @@ class IndexWriter(Thread):
                         [fid, mod, funobj['name'], funobj['arity'], funobj['line'],
                          ", ".join(funobj['args']), funobj['exported']])
             self.__con.commit()
-        except sqlite3.Error:
+        except Exception:
             self.__con.rollback()
             traceback.print_exc()
 

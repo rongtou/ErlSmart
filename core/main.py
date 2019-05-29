@@ -29,7 +29,7 @@ def shutdown():
 
 def init_log():
     logging.basicConfig(level=logging.WARNING,
-                        format='%(asctime)s - %(message)s',
+                        format='%(asctime)s - %(levelname)s : %(message)s',
                         datefmt='%Y-%m-%d %H:%M:%S')
 
 
@@ -39,7 +39,6 @@ def start_parserv():
 
 
 def start_parserv2():
-    logging.info("start server")
     if platform.system() == "Windows":
         subprocess.Popen(['erl', '-boot', 'start_sasl', '-noshell', '-noinput',
                           '-pa', 'parserv/_build/default/lib/parserv/ebin',
@@ -85,11 +84,11 @@ def scan(all_folders: list):
 
 
 def del_outdated_index():
-    sublime.set_timeout_async(lambda: del_outdated_index2(), 60000)
+    sublime.set_timeout_async(lambda: del_outdated_index2(), 50)
 
 
 def del_outdated_index2():
     paths = gv.index_reader().get_paths()
     for path in paths:
         if not os.path.exists(path):
-            del_index_job(path, True)
+            del_index_job(path, False)
