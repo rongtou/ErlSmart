@@ -85,15 +85,15 @@ class IndexReader(object):
         else:
             return ret[0] != modified
 
-    def get_completions(self, mod):
+    def get_completions(self, mod, fun):
         completions = []
         con = self.get_con()
         cur = con.cursor()
         ret = []
         try:
             cur.execute(
-                "select path, fun, arity, args from erl_file e join file_path f on e.fid = f.fid where mod=? and exported = 1 order by fun, arity",
-                (mod,))
+                "select path, fun, arity, args from erl_file e join file_path f on e.fid = f.fid where mod=? and exported = 1 and fun like ? order by fun, arity",
+                (mod, fun+"%"))
             ret = cur.fetchall()
         except sqlite3.Error:
             traceback.print_exc()

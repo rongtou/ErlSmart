@@ -28,7 +28,7 @@ class ErlListener(sublime_plugin.EventListener):
 
         if letter == ':':
             module_name = view.substr(view.word(point))
-            completions = gv.index_reader().get_completions(module_name)
+            completions = gv.index_reader().get_completions(module_name, prefix)
             if completions:
                 return (
                     completions,
@@ -41,7 +41,7 @@ class ErlListener(sublime_plugin.EventListener):
                 )
         else:
             if re.match('^[0-9a-z_]+$', prefix) and len(prefix) > 1:
-                return gv.index_reader().get_mods(prefix) + gv.index_reader().get_completions('erlang')
+                return gv.index_reader().get_mods(prefix) + gv.index_reader().get_completions('erlang', prefix)
             else:
                 return None
 
