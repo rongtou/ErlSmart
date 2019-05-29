@@ -21,7 +21,7 @@ class SmartGoto(object):
             self.window.open_file('{0}:{1}'.format(self.options[0][4], self.options[0][3]), sublime.ENCODED_POSITION)
         elif option_len > 1:
             self.window.show_quick_panel(
-                list(map(lambda o: "{}:{}/{}:{}  {}".format(o[0], o[1], o[2], o[3], o[4]), self.options)), self.on_done)
+                list(map(lambda o: "{}:{}/{}  {}:{}".format(o[0], o[1], o[2], o[4], o[3]), self.options)), self.on_done)
         else:
             ret = gv.index_reader().find_mod(module)
             if ret:
