@@ -41,7 +41,7 @@ class ErlListener(sublime_plugin.EventListener):
                 )
         else:
             if re.match('^[0-9a-z_]+$', prefix) and len(prefix) > 1:
-                return gv.index_reader().get_mods() + gv.index_reader().get_completions('erlang')
+                return gv.index_reader().get_mods(prefix) + gv.index_reader().get_completions('erlang')
             else:
                 return None
 

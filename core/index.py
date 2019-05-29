@@ -109,14 +109,14 @@ class IndexReader(object):
                 completions.append(['{}/{}\tMethod'.format(fun, arity), completion])
         return completions
 
-    def get_mods(self):
+    def get_mods(self, mod):
         completions = []
         con = self.get_con()
         cur = con.cursor()
         ret = []
         try:
             cur.execute(
-                "select path, mod from file_path as f left join (select fid, mod from erl_file group by fid, mod) as e on e.fid = f.fid where mod is not null")
+                "select path, mod from file_path as f left join (select fid, mod from erl_file group by fid, mod) as e on e.fid = f.fid where mod like '" + mod + "%'")
             ret = cur.fetchall()
         except sqlite3.Error:
             traceback.print_exc()
