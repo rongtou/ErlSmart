@@ -228,8 +228,10 @@ class IndexWriter(Thread):
                          ", ".join(funobj['args']), funobj['exported']])
             self.__con.commit()
         except Exception:
+            # sometimes watchdog fire modified event, but file is not ready, doesn't has 'mod', just rollback
+            logging.info("add_index_error, path %s", path)
             self.__con.rollback()
-            traceback.print_exc()
+            # traceback.print_exc())
 
     def del_index(self, param):
         path, is_dir = param
