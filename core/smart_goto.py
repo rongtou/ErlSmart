@@ -28,7 +28,15 @@ class SmartGoto(object):
                 self.window.open_file('{0}:0'.format(ret[0]), sublime.ENCODED_POSITION)
             else:
                 # no exact matches, no module info: search for just the name
-                self.window.run_command('goto_definition', {'symbol': kind + ': ' + funcname})
+                matches = lookup_symbol(self.window, kind + ': ' + funcname)
+                if matches:
+                    locations = [loc for loc in matches if loc_is_module(loc, module)]
+                    fname, display_fname, rowcol = locations[0]
+                    row, col = rowcol
+                    self.window.open_file('{0}:{1}'.format(fname, row), sublime.ENCODED_POSITION)
+                    pass
+                else:
+                    self.window.run_command('goto_definition', {'symbol': kind + ': ' + funcname})
 
     def get_mod_fun(self, point):
         mod_name = file_module_name(self.view.file_name())
@@ -54,3 +62,43 @@ def file_module_name(filename):
         return mod_name
     else:
         return None
+
+
+def lookup_symbol(window, symbol):
+    if len(symbol.strip()) < 3:
+        return []
+
+    index_locations = window.lookup_symbol_in_index(symbol)
+    open_file_locations = window.lookup_symbol_in_open_files(symbol)
+
+    def file_in_location_list(fname, locations):
+        for l in locations:
+            if l[0] == fname:
+                return True
+        return False;
+
+    # Combine the two lists, overriding results in the index with results
+    # from open files, while trying to preserve the order of the files in
+    # the index.
+    locations = []
+    ofl_ignore = []
+    for l in index_locations:
+        if file_in_location_list(l[0], open_file_locations):
+            if not file_in_location_list(l[0], ofl_ignore):
+                for ofl in open_file_locations:
+                    if l[0] == ofl[0]:
+                        locations.append(ofl)
+                        ofl_ignore.append(ofl)
+        else:
+            locations.append(l)
+
+    for ofl in open_file_locations:
+        if not file_in_location_list(ofl[0], ofl_ignore):
+            locations.append(ofl)
+
+    return locations
+
+
+def loc_is_module(loc, expected):
+    lmod = file_module_name(loc[0])
+    return (lmod != None) and (lmod == expected)
