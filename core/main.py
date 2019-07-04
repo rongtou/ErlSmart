@@ -28,7 +28,7 @@ def shutdown():
 
 
 def init_log():
-    logging.basicConfig(level=logging.WARNING,
+    logging.basicConfig(level=logging.DEBUG,
                         format='%(asctime)s - %(levelname)s : %(message)s',
                         datefmt='%Y-%m-%d %H:%M:%S')
 

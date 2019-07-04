@@ -93,7 +93,7 @@ class IndexReader(object):
         try:
             cur.execute(
                 "select path, fun, arity, args from erl_file e join file_path f on e.fid = f.fid where mod=? and exported = 1 and fun like ? order by fun, arity",
-                (mod, fun+"%"))
+                (mod, fun + "%"))
             ret = cur.fetchall()
         except sqlite3.Error:
             traceback.print_exc()
@@ -147,33 +147,42 @@ class IndexReader(object):
 
     def find_fun(self, mod, fun):
         options = []
+        ret = []
         con = self.get_con()
         cur = con.cursor()
         try:
             cur.execute(
                 "select mod, fun, arity, line, path from erl_file e join file_path f on e.fid = f.fid  where mod=? and fun = ? order by arity",
                 (mod, fun))
-            options = cur.fetchall()
+            ret = cur.fetchall()
         except sqlite3.Error:
             traceback.print_exc()
         finally:
             self.release_con(con)
+
+        for (mod, fun, arity, line, path) in ret:
+            if path_in_cur_folders(path):
+                options.append((mod, fun, arity, line, path))
 
         return options
 
     def find_mod(self, mod):
         con = self.get_con()
         cur = con.cursor()
-        ret = None
+        ret = []
         try:
             cur.execute(
-                "select DISTINCT(path) from erl_file e join file_path f on e.fid = f.fid  where mod=?", (mod,))
-            ret = cur.fetchone()
+                "select path from erl_file e join file_path f on e.fid = f.fid  where mod=?", (mod,))
+            ret = cur.fetchall()
         except sqlite3.Error:
             traceback.print_exc()
         finally:
             self.release_con(con)
-        return ret
+
+        for (path,) in ret:
+            if path_in_cur_folders(path):
+                return (path,)
+        return None
 
 
 class IndexWriter(Thread):
